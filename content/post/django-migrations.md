@@ -47,18 +47,17 @@ schema won't be changed if it can be avoided leading to subpar data modeling.
 Understanding the kind of issues that arise during online migrations should
 help you avoid both unexpected outages and unnecessary downtimes.
 
-Throughout this article I assume you use Django 1.7 or above, Django migrations
-as the DB migration tool, and Postgres as your SQL database.
-
 # Scenarios
 
 Let's look at migrations scenarios, starting with the most common cases.
+Throughout this article I assume you use Django 1.7 or above, Django migrations
+as the DB migration tool, and Postgres as your SQL database.
 
 ## Add a table
 
-This one is simple - as nobody is accessing this table when your migration is
-run, you just need to make sure to run the migration *before* the code accessing
-the table is deployed.
+Adding a new table is simple - as nobody is accessing this table when your
+migration is run, you just need to make sure to run the migration *before* the
+code accessing the table is deployed.
 
 Here's an illustration of how this looks on a common small-scale configuration
 with three application servers and one database server:
@@ -242,11 +241,17 @@ This requires an exclusive lock for adding a column but doesn't perform a table 
 #### Add the default to the database schema 
 
 ```python
-migrations.AlterField(
-    model_name='user',
-    name='blocked',
-    field=models.NullBooleanField(default=False),
-    preserve_default=True,
+RunSQL(
+  'ALTER TABLE users ALTER COLUMN blocked SET DEFAULT false',
+  'ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT',
+  state_operations=[
+    migrations.AlterField(
+        model_name='user',
+        name='blocked',
+        field=models.NullBooleanField(default=False),
+        preserve_default=True,
+    )
+  ],
 )
 ```
 
@@ -274,15 +279,17 @@ def non_atomic_migration(func):
 The actual data migration would then look like that:
 
 ```python
+BATCHSIZE = 1000
+
 @non_atomic_migration
 def initialize_data(apps, schema_editor):
     User = apps.get_model("user", "User")
     max_pk = User.objects.aggregate(Max('pk'))['pk__max']
     if max_pk is not None:
-        for offset in range(0, max_pk+1, batchsize):
+        for offset in range(0, max_pk+1, BATCHSIZE):
             (User
              .filter(pk__gte=offset)
-             .filter(pk__lt=offset+batchsize)
+             .filter(pk__lt=offset+BATCHSIZE)
              .filter(blocked__isnull=True)
              .update(blocked=False))
 

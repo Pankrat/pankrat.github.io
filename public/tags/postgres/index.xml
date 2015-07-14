@@ -56,18 +56,17 @@ schema won&amp;rsquo;t be changed if it can be avoided leading to subpar data mo
 &lt;p&gt;Understanding the kind of issues that arise during online migrations should
 help you avoid both unexpected outages and unnecessary downtimes.&lt;/p&gt;
 
-&lt;p&gt;Throughout this article I assume you use Django 1.7 or above, Django migrations
-as the DB migration tool, and Postgres as your SQL database.&lt;/p&gt;
-
 &lt;h1 id=&#34;scenarios:29c4533310fb23be2fc88d399c969fd7&#34;&gt;Scenarios&lt;/h1&gt;
 
-&lt;p&gt;Let&amp;rsquo;s look at migrations scenarios, starting with the most common cases.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s look at migrations scenarios, starting with the most common cases.
+Throughout this article I assume you use Django 1.7 or above, Django migrations
+as the DB migration tool, and Postgres as your SQL database.&lt;/p&gt;
 
 &lt;h2 id=&#34;add-a-table:29c4533310fb23be2fc88d399c969fd7&#34;&gt;Add a table&lt;/h2&gt;
 
-&lt;p&gt;This one is simple - as nobody is accessing this table when your migration is
-run, you just need to make sure to run the migration &lt;em&gt;before&lt;/em&gt; the code accessing
-the table is deployed.&lt;/p&gt;
+&lt;p&gt;Adding a new table is simple - as nobody is accessing this table when your
+migration is run, you just need to make sure to run the migration &lt;em&gt;before&lt;/em&gt; the
+code accessing the table is deployed.&lt;/p&gt;
 
 &lt;p&gt;Here&amp;rsquo;s an illustration of how this looks on a common small-scale configuration
 with three application servers and one database server:&lt;/p&gt;
@@ -236,11 +235,17 @@ rows.&lt;/p&gt;
 
 &lt;h4 id=&#34;add-the-default-to-the-database-schema:29c4533310fb23be2fc88d399c969fd7&#34;&gt;Add the default to the database schema&lt;/h4&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;migrations.AlterField(
-    model_name=&#39;user&#39;,
-    name=&#39;blocked&#39;,
-    field=models.NullBooleanField(default=False),
-    preserve_default=True,
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;RunSQL(
+  &#39;ALTER TABLE users ALTER COLUMN blocked SET DEFAULT false&#39;,
+  &#39;ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT&#39;,
+  state_operations=[
+    migrations.AlterField(
+        model_name=&#39;user&#39;,
+        name=&#39;blocked&#39;,
+        field=models.NullBooleanField(default=False),
+        preserve_default=True,
+    )
+  ],
 )
 &lt;/code&gt;&lt;/pre&gt;
 
@@ -266,15 +271,17 @@ decorator to be used with the &lt;code&gt;RunPython&lt;/code&gt; operation:&lt;/
 
 &lt;p&gt;The actual data migration would then look like that:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@non_atomic_migration
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;BATCHSIZE = 1000
+
+@non_atomic_migration
 def initialize_data(apps, schema_editor):
     User = apps.get_model(&amp;quot;user&amp;quot;, &amp;quot;User&amp;quot;)
     max_pk = User.objects.aggregate(Max(&#39;pk&#39;))[&#39;pk__max&#39;]
     if max_pk is not None:
-        for offset in range(0, max_pk+1, batchsize):
+        for offset in range(0, max_pk+1, BATCHSIZE):
             (User
              .filter(pk__gte=offset)
-             .filter(pk__lt=offset+batchsize)
+             .filter(pk__lt=offset+BATCHSIZE)
              .filter(blocked__isnull=True)
              .update(blocked=False))
 
