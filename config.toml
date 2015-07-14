@@ -1,0 +1,18 @@
+baseurl = "http://pankrat.github.io"
+languageCode = "en-us"
+title = "Another web backend developer Blog"
+theme = "hyde-x"
+
+[author]
+
+name = "Ludwig Hähne"
+
+[permalinks]
+
+post = "/:year/:title/"
+
+[params]
+
+highlight = "zenburn"
+github = "https://github.com/Pankrat"
+twitter = "https://twitter.com/pankrateer"
