@@ -125,7 +125,7 @@ and the risk of deadlocks is reduced.
 
 ### Table rewrites
 
-The figure above illustrates the importance, that the DDL statement finishes
+The figure above illustrates the importance of the DDL statement finishing
 in a very short time, so that all blocked queries can resume before the
 associated requests time out.
 
@@ -435,10 +435,13 @@ However, many smaller schema changes can be safely carried out on a live site
 when keeping a few important things in mind:
 
 * Add columns as nullable for bigger tables
+* When adding NOT NULL columns, add a default to the database manually
 * Keep migrations small
+* Use django-admin sqlmigrate to understand what happens at the DB level
+* Test and time your migrations on your staging database
 * Temporarily shut down batch processing jobs which operate on tables to be
   changed
-* Update rows in large tables in smaller transactional batches
+* Update rows of large tables in smaller transactional batches
 
 ## Django wishlist
 
