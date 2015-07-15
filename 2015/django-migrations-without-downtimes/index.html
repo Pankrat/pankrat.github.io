@@ -166,7 +166,7 @@ and the risk of deadlocks is reduced.</p>
 
 <h3 id="table-rewrites:29c4533310fb23be2fc88d399c969fd7">Table rewrites</h3>
 
-<p>The figure above illustrates the importance, that the DDL statement finishes
+<p>The figure above illustrates the importance of the DDL statement finishing
 in a very short time, so that all blocked queries can resume before the
 associated requests time out.</p>
 
@@ -459,10 +459,13 @@ when keeping a few important things in mind:</p>
 
 <ul>
 <li>Add columns as nullable for bigger tables</li>
+<li>When adding NOT NULL columns, add a default to the database manually</li>
 <li>Keep migrations small</li>
+<li>Use django-admin sqlmigrate to understand what happens at the DB level</li>
+<li>Test and time your migrations on your staging database</li>
 <li>Temporarily shut down batch processing jobs which operate on tables to be
 changed</li>
-<li>Update rows in large tables in smaller transactional batches</li>
+<li>Update rows of large tables in smaller transactional batches</li>
 </ul>
 
 <h2 id="django-wishlist:29c4533310fb23be2fc88d399c969fd7">Django wishlist</h2>
