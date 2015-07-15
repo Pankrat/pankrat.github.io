@@ -186,7 +186,7 @@ created operation. However, you can override the original migration by using
 
 ```python
 RunSQL(
-  'ALTER TABLE users ADD COLUMN blocked SET NOT NULL DEFAULT false',
+  'ALTER TABLE users ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT false',
   'ALTER TABLE users DROP COLUMN blocked',
   state_operations=[
       migrations.AddField(
@@ -214,7 +214,7 @@ Running the migration with `django-admin sqlmigrate` reveals what Django is doin
 
 ```sql
 BEGIN;
-ALTER TABLE users ADD COLUMN blocked DEFAULT false NULL;
+ALTER TABLE users ADD COLUMN blocked BOOLEAN DEFAULT false NULL;
 ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT;
 COMMIT;
 ```
