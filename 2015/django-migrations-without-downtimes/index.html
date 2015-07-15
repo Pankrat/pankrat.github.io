@@ -223,7 +223,7 @@ created operation. However, you can override the original migration by using
 <a href="https://docs.djangoproject.com/en/1.8/ref/migration-operations/#runsql">RunSQL while specifying the original state operation</a>.</p>
 
 <pre><code class="language-python">RunSQL(
-  'ALTER TABLE users ADD COLUMN blocked SET NOT NULL DEFAULT false',
+  'ALTER TABLE users ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT false',
   'ALTER TABLE users DROP COLUMN blocked',
   state_operations=[
       migrations.AddField(
@@ -247,7 +247,7 @@ choice</a>.</p>
 <p>Running the migration with <code>django-admin sqlmigrate</code> reveals what Django is doing here:</p>
 
 <pre><code class="language-sql">BEGIN;
-ALTER TABLE users ADD COLUMN blocked DEFAULT false NULL;
+ALTER TABLE users ADD COLUMN blocked BOOLEAN DEFAULT false NULL;
 ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT;
 COMMIT;
 </code></pre>

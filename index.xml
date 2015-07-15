@@ -186,7 +186,7 @@ created operation. However, you can override the original migration by using
 &lt;a href=&#34;https://docs.djangoproject.com/en/1.8/ref/migration-operations/#runsql&#34;&gt;RunSQL while specifying the original state operation&lt;/a&gt;.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;RunSQL(
-  &#39;ALTER TABLE users ADD COLUMN blocked SET NOT NULL DEFAULT false&#39;,
+  &#39;ALTER TABLE users ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT false&#39;,
   &#39;ALTER TABLE users DROP COLUMN blocked&#39;,
   state_operations=[
       migrations.AddField(
@@ -210,7 +210,7 @@ choice&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Running the migration with &lt;code&gt;django-admin sqlmigrate&lt;/code&gt; reveals what Django is doing here:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;BEGIN;
-ALTER TABLE users ADD COLUMN blocked DEFAULT false NULL;
+ALTER TABLE users ADD COLUMN blocked BOOLEAN DEFAULT false NULL;
 ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT;
 COMMIT;
 &lt;/code&gt;&lt;/pre&gt;
