@@ -2,6 +2,7 @@
 date = "2015-05-01T16:16:19+02:00"
 draft = false
 title = "About me"
+menu = "main"
 
 +++
 
