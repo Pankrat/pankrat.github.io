@@ -9,7 +9,7 @@ author = "Ludwig Hähne"
 +++
 
 Most web applications use a relational database. The database schema needs to
-be changed over time as featured are added, changed or removed. These database
+be changed over time as features are added, changed or removed. These database
 migrations need to be designed and integrated in your deployment process. On
 the one hand, scheduled downtimes can be expensive for the business and are
 painful to organize for larger sites or organizations. On the other hand,
@@ -168,7 +168,7 @@ User.objects.exclude(blocked=True)
 
 ### Default values
 
-Django is pretty opinionated in what it pushes it down to the database. There
+Django is pretty opinionated in what it pushes down to the database. There
 is one thing in particular that you'll have to consider when trying to perform
 migration without downtimes: Default values.
 
