@@ -287,7 +287,7 @@ def initialize_data(apps, schema_editor):
     max_pk = User.objects.aggregate(Max('pk'))['pk__max']
     if max_pk is not None:
         for offset in range(0, max_pk+1, BATCHSIZE):
-            (User
+            (User.objects
              .filter(pk__gte=offset)
              .filter(pk__lt=offset+BATCHSIZE)
              .filter(blocked__isnull=True)
