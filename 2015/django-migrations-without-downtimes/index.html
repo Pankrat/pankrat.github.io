@@ -10,18 +10,19 @@
   <title>Django migrations without downtimes &middot; Ludwig Hähne</title>
 
   
-  <link rel="stylesheet" href="http://pankrat.github.io//css/poole.css">
-  <link rel="stylesheet" href="http://pankrat.github.io//css/hyde.css">
-  <link rel="stylesheet" href="http://pankrat.github.io//css/poole-overrides.css">
-  <link rel="stylesheet" href="http://pankrat.github.io//css/hyde-overrides.css">
-  <link rel="stylesheet" href="http://pankrat.github.io//css/hyde-x.css">
-  <link rel="stylesheet" href="http://pankrat.github.io//css/highlight/zenburn.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/poole.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/poole-overrides.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde-overrides.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde-x.css">
+  <link rel="stylesheet" href="http://pankrat.github.io/css/highlight/zenburn.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
 
   
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
-  <link href="/favicon.png" rel="icon">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://pankrat.github.io/touch-icon-144-precomposed.png">
+  <link href="http://pankrat.github.io/favicon.png" rel="icon">
 
   
   
@@ -31,28 +32,43 @@
   <meta name="description" content="">
   <meta name="keywords" content="">
   
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-65184520-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+  
 </head>
 <body>
 <div class="sidebar">
   <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      
+      
+    </div>
+
     <ul class="sidebar-nav">
-      <li class="sidebar-nav-item"><a href="http://pankrat.github.io//">Home</a></li>
+      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/">Blog</a></li>
       
-      <li class="sidebar-nav-item"><a href="/about/">About me</a></li>
+      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/about/">About me</a></li>
       
-      <li class="sidebar-nav-item"><a href="/2015/django-migrations-without-downtimes/">Django migrations without downtimes</a></li>
+      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/2015/django-migrations-without-downtimes/">Django migrations without downtimes</a></li>
       
     </ul>
 
     <div><small>By Ludwig Hähne</small></div>
-    <small>Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></small>
+    <div><small>Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></small></div>
   </div>
 </div>
 
 
 <div class="content container">
   <div class="post">
-    <h1>Django migrations without downtimes</h1>
+    <h1 class="post-title">Django migrations without downtimes</h1>
     <span class="post-date">Jul 14, 2015 &middot; 12 minute read
     </span>
     
@@ -68,7 +84,7 @@ those can be safely carried out on a live system with a Postgres database.
 We’ll look at locking and timing issues, multi-phase deployments and migration
 system peculiarities.</p>
 
-<h1 id="introduction:29c4533310fb23be2fc88d399c969fd7">Introduction</h1>
+<h1 id="introduction">Introduction</h1>
 
 <p>Database migrations are the major obstacles in adopting continuous deployment
 for a web application. While tool support has improved considerably in the last
@@ -96,13 +112,13 @@ schema won&rsquo;t be changed if it can be avoided leading to subpar data modeli
 <p>Understanding the kind of issues that arise during online migrations should
 help you avoid both unexpected outages and unnecessary downtimes.</p>
 
-<h1 id="scenarios:29c4533310fb23be2fc88d399c969fd7">Scenarios</h1>
+<h1 id="scenarios">Scenarios</h1>
 
 <p>Let&rsquo;s look at migrations scenarios, starting with the most common cases.
 Throughout this article I assume you use Django 1.7 or above, Django migrations
 as the DB migration tool, and Postgres as your SQL database.</p>
 
-<h2 id="add-a-table:29c4533310fb23be2fc88d399c969fd7">Add a table</h2>
+<h2 id="add-a-table">Add a table</h2>
 
 <p>Adding a new table is simple - as nobody is accessing this table when your
 migration is run, you just need to make sure to run the migration <em>before</em> the
@@ -111,8 +127,7 @@ code accessing the table is deployed.</p>
 <p>Here&rsquo;s an illustration of how this looks on a common small-scale configuration
 with three application servers and one database server:</p>
 
-<p><img src="/migration.gif" alt="Rolling deployment" />
-</p>
+<p><img src="/migration.gif" alt="Rolling deployment" /></p>
 
 <p>If you apply migrations from your application servers, it is quite easy
 automating this kind of migration as part of the deployment process:</p>
@@ -129,13 +144,13 @@ from each server <a href="https://groups.google.com/forum/#!topic/south-users/9T
 parallel</a>. However, not all migrations can be applied before
 the code goes live as we&rsquo;ll see when we get to column removal.</p>
 
-<h2 id="add-a-column:29c4533310fb23be2fc88d399c969fd7">Add a column</h2>
+<h2 id="add-a-column">Add a column</h2>
 
 <p>Adding a column to an existing table is probably the most common database
 operation. How hard it is to add a column to an existing table depends on many
 factors:</p>
 
-<h3 id="locks:29c4533310fb23be2fc88d399c969fd7">Locks</h3>
+<h3 id="locks">Locks</h3>
 
 <p>When adding a column to a table you implicitly grab an <a href="http://www.postgresql.org/docs/9.4/static/sql-altertable.html">exclusive lock on the
 table</a>. If any reads or writes are performed on the table while you
@@ -144,8 +159,7 @@ active operations on the table need to complete before the migration can
 proceed. As soon as the migration is started, subsequent reads and writes on
 the table are blocked until the migration is complete.</p>
 
-<p><img src="/locks.png" alt="Locks" />
-</p>
+<p><img src="/locks.png" alt="Locks" /></p>
 
 <p>In Postgres <a href="http://www.slideshare.net/jkshah/understanding-postgresql-lw-locks">blocked queries queue up in a simple FIFO waiting list</a>.
 There is no reader-writer preference so even plain <a href="http://www.databasesoup.com/2013/11/alter-table-and-downtime-part-ii.html">reads queue up behind your
@@ -157,7 +171,7 @@ running when you try to apply your migration. Thus, if you have any
 asynchronous services that use slow queries, you might want to shut those
 down before running your migrations.</p>
 
-<h3 id="transactions:29c4533310fb23be2fc88d399c969fd7">Transactions</h3>
+<h3 id="transactions">Transactions</h3>
 
 <p>Postgres supports transactional DDL. The current versions of Django put the
 transactional scope on the migration level. In other words, <a href="https://github.com/django/django/blob/stable/1.7.x/django/db/migrations/executor.py#L100">one
@@ -167,7 +181,7 @@ multiple tables at the same time, you might want to split the associated
 migrations in small chunks so that locks aren&rsquo;t held for longer than necessary
 and the risk of deadlocks is reduced.</p>
 
-<h3 id="table-rewrites:29c4533310fb23be2fc88d399c969fd7">Table rewrites</h3>
+<h3 id="table-rewrites">Table rewrites</h3>
 
 <p>The figure above illustrates the importance of the DDL statement finishing
 in a very short time, so that all blocked queries can resume before the
@@ -189,7 +203,7 @@ and does not require any immediate update of the table&rsquo;s data; the added N
 values are supplied on readout, instead.</p>
 </blockquote>
 
-<h3 id="null-or-not-null:29c4533310fb23be2fc88d399c969fd7">NULL or NOT NULL</h3>
+<h3 id="null-or-not-null">NULL or NOT NULL</h3>
 
 <p>From an operations perspective you could just declare all your fields as
 nullable and circumvent a lot of problems when applying migrations. However,
@@ -207,7 +221,7 @@ User.objects.filter(~Q(blocked=True))
 User.objects.exclude(blocked=True)
 </code></pre>
 
-<h3 id="default-values:29c4533310fb23be2fc88d399c969fd7">Default values</h3>
+<h3 id="default-values">Default values</h3>
 
 <p>Django is pretty opinionated in what it pushes down to the database. There
 is one thing in particular that you&rsquo;ll have to consider when trying to perform
@@ -239,7 +253,7 @@ created operation. However, you can override the original migration by using
 )
 </code></pre>
 
-<h3 id="example-adding-a-boolean-field:29c4533310fb23be2fc88d399c969fd7">Example: Adding a boolean field</h3>
+<h3 id="example-adding-a-boolean-field">Example: Adding a boolean field</h3>
 
 <p>Let&rsquo;s assume you&rsquo;d like to add a boolean field to a large table that is false
 by default. By testing the migration on your staging database you established
@@ -261,7 +275,7 @@ rows.</p>
 
 <p>What you can do is setting up multiple migrations:</p>
 
-<h4 id="add-the-field-as-nullable-without-a-default:29c4533310fb23be2fc88d399c969fd7">Add the field as nullable without a default</h4>
+<h4 id="add-the-field-as-nullable-without-a-default">Add the field as nullable without a default</h4>
 
 <pre><code class="language-python">migrations.AddField(
     model_name='user',
@@ -273,7 +287,7 @@ rows.</p>
 
 <p>This requires an exclusive lock for adding a column but doesn&rsquo;t perform a table rewrite.</p>
 
-<h4 id="add-the-default-to-the-database-schema:29c4533310fb23be2fc88d399c969fd7">Add the default to the database schema</h4>
+<h4 id="add-the-default-to-the-database-schema">Add the default to the database schema</h4>
 
 <pre><code class="language-python">RunSQL(
   'ALTER TABLE users ALTER COLUMN blocked SET DEFAULT false',
@@ -291,7 +305,10 @@ rows.</p>
 
 <p>Adding a default to an existing column also doesn&rsquo;t require an expensive table rewrite.</p>
 
-<h4 id="update-existing-rows:29c4533310fb23be2fc88d399c969fd7">Update existing rows</h4>
+<h4 id="update-existing-rows">Update existing rows</h4>
+
+<p><em>Update December 2017</em>: Support for <a href="https://docs.djangoproject.com/en/2.0/howto/writing-migrations/#non-atomic-migrations">non-atomic migrations</a> was
+added to Django 1.10. The following hacks are not necessary anymore.</p>
 
 <p><a href="http://stackoverflow.com/questions/1113277/how-do-i-do-large-non-blocking-updates-in-postgresql">Updating data in batches</a> as part of your data migration is
 tricky because you will have to <a href="http://stackoverflow.com/questions/31247810/commit-manually-in-django-data-migration">break out of the database
@@ -319,7 +336,7 @@ def initialize_data(apps, schema_editor):
     max_pk = User.objects.aggregate(Max('pk'))['pk__max']
     if max_pk is not None:
         for offset in range(0, max_pk+1, BATCHSIZE):
-            (User
+            (User.objects
              .filter(pk__gte=offset)
              .filter(pk__lt=offset+BATCHSIZE)
              .filter(blocked__isnull=True)
@@ -334,7 +351,7 @@ class Migration(migrations.Migration):
 <p>Hopefully this will be addressed in future versions of Django so that it won&rsquo;t
 be necessary to resort to this kind of hack.</p>
 
-<h4 id="set-the-not-null-constraint-on-the-field:29c4533310fb23be2fc88d399c969fd7">Set the not null constraint on the field</h4>
+<h4 id="set-the-not-null-constraint-on-the-field">Set the not null constraint on the field</h4>
 
 <pre><code class="language-python">migrations.AlterField(
     model_name='user',
@@ -346,7 +363,7 @@ be necessary to resort to this kind of hack.</p>
 
 <p>This will perform a table scan before it sets the constraint on the database.</p>
 
-<h2 id="remove-a-table-or-column:29c4533310fb23be2fc88d399c969fd7">Remove a table or column</h2>
+<h2 id="remove-a-table-or-column">Remove a table or column</h2>
 
 <p><a href="http://www.databasesoup.com/2013/11/alter-table-and-downtime-part-i.html">Removing a table or even a column is easy</a> but has one slight
 twist compared to the other scenarios: You need to run the migration <em>after</em>
@@ -363,7 +380,7 @@ above, you&rsquo;ll have to split the deployment in two phases. In the first pha
 the column is removed from the model and not-null constraints are dropped if
 necessary. Phase two only contains the column removal operation.</p>
 
-<h2 id="transform-and-move-data:29c4533310fb23be2fc88d399c969fd7">Transform and move data</h2>
+<h2 id="transform-and-move-data">Transform and move data</h2>
 
 <p>So far we&rsquo;ve only covered adding and removing features. It gets more
 interesting and challenging when the existing data model is changed. Let&rsquo;s take
@@ -431,7 +448,7 @@ capabilities and are mostly invisible. However, when rolling out more involved
 updates I found them to be very robust compared to the other approaches. Just
 remember to remove triggers after they served their purpose.</p>
 
-<h1 id="summary:29c4533310fb23be2fc88d399c969fd7">Summary</h1>
+<h1 id="summary">Summary</h1>
 
 <p>Apart from not requiring a downtime, there are various upsides of doing on-line
 migrations:</p>
@@ -471,18 +488,18 @@ changed</li>
 <li>Update rows of large tables in smaller transactional batches</li>
 </ul>
 
-<h2 id="django-wishlist:29c4533310fb23be2fc88d399c969fd7">Django wishlist</h2>
+<h2 id="django-wishlist">Django wishlist</h2>
 
 <p>There are improvements that could be made in Django, which would simplify
 some of the migration scenarios. Here is my wishlist:</p>
 
 <ul>
-<li>Make it possible to mark migrations as non-atomic</li>
+<li>Make it possible to mark migrations as non-atomic (added in Django 1.10)</li>
 <li>Allow to preserve defaults in the database (where possible)</li>
 <li>Allow flagging post-deployment migrations and allow to exempt those while migrating</li>
 </ul>
 
-<h2 id="final-notes:29c4533310fb23be2fc88d399c969fd7">Final notes</h2>
+<h2 id="final-notes">Final notes</h2>
 
 <p>I hope this post was helpful. If you spot any errors or have any other remarks
 I&rsquo;d appreciate if you&rsquo;d <a href="https://github.com/Pankrat/pankrat.github.io/issues">raise an issue on GitHub</a> or <a href="https://twitter.com/pankrateer">reach out via
@@ -495,15 +512,8 @@ Twitter</a>.</p>
 
 
 
-<script src="http://pankrat.github.io//js/highlight.pack.js"></script>
+<script src="http://pankrat.github.io/js/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
-
-<script>
-  var _gaq=[['_setAccount','UA-65184520-1'],['_trackPageview']];
-  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-  s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
-
 </body>
 </html>
+
