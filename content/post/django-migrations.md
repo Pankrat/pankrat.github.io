@@ -1,5 +1,6 @@
 +++
 date = "2015-07-14"
+lastmod = "2017-12-25"
 draft = false
 title = "Django migrations without downtimes"
 tags = ["postgres", "django"]
@@ -259,6 +260,9 @@ Adding a default to an existing column also doesn't require an expensive table r
 
 #### Update existing rows
 
+*Update December 2017*: Support for [non-atomic migrations][NonAtomic] was
+added to Django 1.10. The following hacks are not necessary anymore.
+
 [Updating data in batches][BatchUpdate] as part of your data migration is
 tricky because you will have to [break out of the database
 transaction][BreakAtomic] that is already started by the migration executor.
@@ -317,6 +321,7 @@ This will perform a table scan before it sets the constraint on the database.
 
 [BatchUpdate]: http://stackoverflow.com/questions/1113277/how-do-i-do-large-non-blocking-updates-in-postgresql
 [BreakAtomic]: http://stackoverflow.com/questions/31247810/commit-manually-in-django-data-migration 
+[NonAtomic]: https://docs.djangoproject.com/en/2.0/howto/writing-migrations/#non-atomic-migrations
 
 ## Remove a table or column
 
@@ -448,7 +453,7 @@ when keeping a few important things in mind:
 There are improvements that could be made in Django, which would simplify
 some of the migration scenarios. Here is my wishlist:
 
-* Make it possible to mark migrations as non-atomic
+* Make it possible to mark migrations as non-atomic (added in Django 1.10)
 * Allow to preserve defaults in the database (where possible)
 * Allow flagging post-deployment migrations and allow to exempt those while migrating
 
