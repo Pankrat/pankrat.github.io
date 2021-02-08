@@ -1,22 +1,22 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Django on Another web backend developer Blog</title>
-    <link>http://pankrat.github.io/tags/django/</link>
-    <description>Recent content in Django on Another web backend developer Blog</description>
+    <title>django on Another web backend developer Blog</title>
+    <link>https://pankrat.github.io/tags/django/</link>
+    <description>Recent content in django on Another web backend developer Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 14 Jul 2015 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="http://pankrat.github.io/tags/django/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://pankrat.github.io/tags/django/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Django migrations without downtimes</title>
-      <link>http://pankrat.github.io/2015/django-migrations-without-downtimes/</link>
+      <link>https://pankrat.github.io/2015/django-migrations-without-downtimes/</link>
       <pubDate>Tue, 14 Jul 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://pankrat.github.io/2015/django-migrations-without-downtimes/</guid>
+      <guid>https://pankrat.github.io/2015/django-migrations-without-downtimes/</guid>
       <description>Most web applications use a relational database. The database schema needs to be changed over time as features are added, changed or removed. These database migrations need to be designed and integrated in your deployment process. On the one hand, scheduled downtimes can be expensive for the business and are painful to organize for larger sites or organizations. On the other hand, applying migrations on a live system can bring down your web-server in counter-intuitive ways.</description>
     </item>
     
