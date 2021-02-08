@@ -1,50 +1,44 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://pankrat.github.io/2015/django-migrations-without-downtimes/</loc>
+    <loc>https://pankrat.github.io/tags/django/</loc>
     <lastmod>2017-12-25T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://pankrat.github.io/about/</loc>
+    <loc>https://pankrat.github.io/2015/django-migrations-without-downtimes/</loc>
+    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pankrat.github.io/tags/postgres/</loc>
+    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pankrat.github.io/post/</loc>
+    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pankrat.github.io/tags/</loc>
+    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pankrat.github.io/about/</loc>
     <lastmod>2015-05-01T16:16:19+02:00</lastmod>
   </url>
   
   <url>
-    <loc>http://pankrat.github.io/</loc>
-    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
-    <priority>0</priority>
+    <loc>https://pankrat.github.io/</loc>
+    <lastmod>2015-05-01T16:16:19+02:00</lastmod>
   </url>
   
   <url>
-    <loc>http://pankrat.github.io/categories/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://pankrat.github.io/tags/django/</loc>
-    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://pankrat.github.io/tags/postgres/</loc>
-    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://pankrat.github.io/post/</loc>
-    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://pankrat.github.io/tags/</loc>
-    <lastmod>2017-12-25T00:00:00+00:00</lastmod>
-    <priority>0</priority>
+    <loc>https://pankrat.github.io/categories/</loc>
   </url>
   
 </urlset>

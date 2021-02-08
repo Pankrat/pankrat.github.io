@@ -10,19 +10,19 @@
   <title>Django migrations without downtimes &middot; Ludwig Hähne</title>
 
   
-  <link rel="stylesheet" href="http://pankrat.github.io/css/poole.css">
-  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde.css">
-  <link rel="stylesheet" href="http://pankrat.github.io/css/poole-overrides.css">
-  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde-overrides.css">
-  <link rel="stylesheet" href="http://pankrat.github.io/css/hyde-x.css">
-  <link rel="stylesheet" href="http://pankrat.github.io/css/highlight/zenburn.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/poole.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/hyde.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/poole-overrides.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/hyde-overrides.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/hyde-x.css">
+  <link rel="stylesheet" href="https://pankrat.github.io/css/highlight/zenburn.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
   
 
   
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://pankrat.github.io/touch-icon-144-precomposed.png">
-  <link href="http://pankrat.github.io/favicon.png" rel="icon">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://pankrat.github.io/touch-icon-144-precomposed.png">
+  <link href="https://pankrat.github.io/favicon.png" rel="icon">
 
   
   
@@ -31,16 +31,6 @@
 
   <meta name="description" content="">
   <meta name="keywords" content="">
-  
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-65184520-1', 'auto');
-    ga('send', 'pageview');
-  </script>
   
 </head>
 <body>
@@ -52,11 +42,11 @@
     </div>
 
     <ul class="sidebar-nav">
-      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/">Blog</a></li>
+      <li class="sidebar-nav-item"><a href="https://pankrat.github.io/">Blog</a></li>
       
-      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/about/">About me</a></li>
+      <li class="sidebar-nav-item"><a href="https://pankrat.github.io/about/">About me</a></li>
       
-      <li class="sidebar-nav-item"><a href="http://pankrat.github.io/2015/django-migrations-without-downtimes/">Django migrations without downtimes</a></li>
+      <li class="sidebar-nav-item"><a href="https://pankrat.github.io/2015/django-migrations-without-downtimes/">Django migrations without downtimes</a></li>
       
     </ul>
 
@@ -71,9 +61,7 @@
     <h1 class="post-title">Django migrations without downtimes</h1>
     <span class="post-date">Jul 14, 2015 &middot; 12 minute read
     </span>
-    
-
-<p>Most web applications use a relational database. The database schema needs to
+    <p>Most web applications use a relational database. The database schema needs to
 be changed over time as features are added, changed or removed. These database
 migrations need to be designed and integrated in your deployment process. On
 the one hand, scheduled downtimes can be expensive for the business and are
@@ -83,96 +71,72 @@ counter-intuitive ways. I’ll talk about common schema change scenarios and how
 those can be safely carried out on a live system with a Postgres database.
 We’ll look at locking and timing issues, multi-phase deployments and migration
 system peculiarities.</p>
-
 <h1 id="introduction">Introduction</h1>
-
 <p>Database migrations are the major obstacles in adopting continuous deployment
 for a web application. While tool support has improved considerably in the last
 years, actually deploying these database changes continues to be a
 stressful chore. For the uninitiated, there are two ways to approach
 database migrations.</p>
-
 <p>With the optimistic approach, one just applies database migrations on a live
 system and hopes for the best. This goes well some of the times, other times
 there are outages and the migration must be aborted. Optimistic migrations are
 always thrilling, but might become overwhelming if unscheduled downtimes are
 unacceptable in your specific use case.</p>
-
 <p>If you burnt your fingers too many times you might switch to the pessimistic
 approach: You schedule a downtime for each database migration. Nothing will
 unexpectedly lock up, instead you&rsquo;ll just be down a lot. Because your customers
 wouldn&rsquo;t like this, you&rsquo;ll bundle up migrations and delay most deployments
 until the next maintenance window opens.</p>
-
 <p>These are of course exaggerations, but are supposed to illustrate that neither
 approach is particularly attractive.  Both turn database migrations into a
 burden that developers will try to avoid to carry. In the worst case, the
 schema won&rsquo;t be changed if it can be avoided leading to subpar data modeling.</p>
-
 <p>Understanding the kind of issues that arise during online migrations should
 help you avoid both unexpected outages and unnecessary downtimes.</p>
-
 <h1 id="scenarios">Scenarios</h1>
-
 <p>Let&rsquo;s look at migrations scenarios, starting with the most common cases.
 Throughout this article I assume you use Django 1.7 or above, Django migrations
 as the DB migration tool, and Postgres as your SQL database.</p>
-
 <h2 id="add-a-table">Add a table</h2>
-
 <p>Adding a new table is simple - as nobody is accessing this table when your
 migration is run, you just need to make sure to run the migration <em>before</em> the
 code accessing the table is deployed.</p>
-
 <p>Here&rsquo;s an illustration of how this looks on a common small-scale configuration
 with three application servers and one database server:</p>
-
-<p><img src="/migration.gif" alt="Rolling deployment" /></p>
-
+<p><img src="/migration.gif" alt="Rolling deployment"></p>
 <p>If you apply migrations from your application servers, it is quite easy
 automating this kind of migration as part of the deployment process:</p>
-
 <ul>
 <li>Deactivate one server in the load balancer configuration (or rely on auto-failover)</li>
 <li>Deploy new code to that server</li>
 <li>Run <code>django-admin migrate</code></li>
 <li>Reactivate the server in the load balancer configuration</li>
 </ul>
-
 <p>As Django migrations are idempotent, it&rsquo;s safe to execute the migration command
 from each server <a href="https://groups.google.com/forum/#!topic/south-users/9TJuEf-gJEE">as long as you don&rsquo;t call those commands in
 parallel</a>. However, not all migrations can be applied before
 the code goes live as we&rsquo;ll see when we get to column removal.</p>
-
 <h2 id="add-a-column">Add a column</h2>
-
 <p>Adding a column to an existing table is probably the most common database
 operation. How hard it is to add a column to an existing table depends on many
 factors:</p>
-
 <h3 id="locks">Locks</h3>
-
 <p>When adding a column to a table you implicitly grab an <a href="http://www.postgresql.org/docs/9.4/static/sql-altertable.html">exclusive lock on the
 table</a>. If any reads or writes are performed on the table while you
 try to apply the migration, the <code>ALTER TABLE</code> statement will be blocked. All
 active operations on the table need to complete before the migration can
 proceed. As soon as the migration is started, subsequent reads and writes on
 the table are blocked until the migration is complete.</p>
-
-<p><img src="/locks.png" alt="Locks" /></p>
-
+<p><img src="/locks.png" alt="Locks"></p>
 <p>In Postgres <a href="http://www.slideshare.net/jkshah/understanding-postgresql-lw-locks">blocked queries queue up in a simple FIFO waiting list</a>.
 There is no reader-writer preference so even plain <a href="http://www.databasesoup.com/2013/11/alter-table-and-downtime-part-ii.html">reads queue up behind your
 blocked alter table statement</a>.</p>
-
 <p>That means that you not only need to care about the processing time incurred by
 the alter table statement, but also about long-running queries that might be
 running when you try to apply your migration. Thus, if you have any
 asynchronous services that use slow queries, you might want to shut those
 down before running your migrations.</p>
-
 <h3 id="transactions">Transactions</h3>
-
 <p>Postgres supports transactional DDL. The current versions of Django put the
 transactional scope on the migration level. In other words, <a href="https://github.com/django/django/blob/stable/1.7.x/django/db/migrations/executor.py#L100">one
 migration</a> is executed in <a href="https://github.com/django/django/blob/stable/1.7.x/django/db/backends/schema.py#L85">one transaction</a>. Database
@@ -180,21 +144,16 @@ locks are held until the end of the database transaction. If you modify
 multiple tables at the same time, you might want to split the associated
 migrations in small chunks so that locks aren&rsquo;t held for longer than necessary
 and the risk of deadlocks is reduced.</p>
-
 <h3 id="table-rewrites">Table rewrites</h3>
-
 <p>The figure above illustrates the importance of the DDL statement finishing
 in a very short time, so that all blocked queries can resume before the
 associated requests time out.</p>
-
 <p>When adding columns with default values, Postgres will modify all existing rows
 of the table which can be a very expensive operation if the table contains a
 lot of data. Essentially, Postgres will copy all existing rows (MVCC) and add
 the new column&rsquo;s default value to each row.</p>
-
 <p>Adding nullable columns without defaults doesn&rsquo;t require full table rewrites as
 stated in the <a href="http://www.postgresql.org/docs/9.4/static/sql-altertable.html#AEN70018">Postgres manual</a>:</p>
-
 <blockquote>
 <p>When a column is added with ADD COLUMN, all existing rows in the table are
 initialized with the column&rsquo;s default value (NULL if no DEFAULT clause is
@@ -202,31 +161,23 @@ specified). If there is no DEFAULT clause, this is merely a metadata change
 and does not require any immediate update of the table&rsquo;s data; the added NULL
 values are supplied on readout, instead.</p>
 </blockquote>
-
 <h3 id="null-or-not-null">NULL or NOT NULL</h3>
-
 <p>From an operations perspective you could just declare all your fields as
 nullable and circumvent a lot of problems when applying migrations. However,
 there are a lot of <a href="https://momjian.us/main/writings/pgsql/nulls.pdf">downsides when working with fields that contain NULL
 values</a>.</p>
-
 <p>As long as you deal with individual objects, null values work well. But you got
 to be careful when using nullable fields in query filters:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> user<span style="color:#f92672">.</span>blocked:
+    <span style="color:#75715e"># Works with `False` and `NULL`</span>
 
-<pre><code class="language-python">if not user.blocked:
-    # Works with `False` and `NULL`
-
-User.objects.filter(blocked=False) # XXX
-User.objects.filter(~Q(blocked=True))
-User.objects.exclude(blocked=True)
-</code></pre>
-
-<h3 id="default-values">Default values</h3>
-
+User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>filter(blocked<span style="color:#f92672">=</span>False) <span style="color:#75715e"># XXX</span>
+User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>filter(<span style="color:#f92672">~</span>Q(blocked<span style="color:#f92672">=</span>True))
+User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>exclude(blocked<span style="color:#f92672">=</span>True)
+</code></pre></div><h3 id="default-values">Default values</h3>
 <p>Django is pretty opinionated in what it pushes down to the database. There
 is one thing in particular that you&rsquo;ll have to consider when trying to perform
 migration without downtimes: Default values.</p>
-
 <p><a href="https://docs.djangoproject.com/en/1.8/ref/migration-operations/#addfield">Django is pretty clear about <em>not</em> keeping defaults in the
 database</a>. What Django does push down though, are not null
 constraints (which is a good thing). If you perform migrations during downtimes
@@ -234,237 +185,179 @@ this doesn&rsquo;t matter. However, if you add a new column with a not-null
 constraint and the default is not stored in the database, any insert operation
 executed from the currently running version will fail with a constraint
 violation because it doesn&rsquo;t know about this new column.</p>
-
 <p>You can&rsquo;t easily tell Django not to drop the constraint in the automatically
 created operation. However, you can override the original migration by using
 <a href="https://docs.djangoproject.com/en/1.8/ref/migration-operations/#runsql">RunSQL while specifying the original state operation</a>.</p>
-
-<pre><code class="language-python">RunSQL(
-  'ALTER TABLE users ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT false',
-  'ALTER TABLE users DROP COLUMN blocked',
-  state_operations=[
-      migrations.AddField(
-          model_name='users',
-          name='blocked',
-          field=models.BooleanField(default=False),
-          preserve_default=True,
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">RunSQL(
+  <span style="color:#e6db74">&#39;ALTER TABLE users ADD COLUMN blocked BOOLEAN NOT NULL DEFAULT false&#39;</span>,
+  <span style="color:#e6db74">&#39;ALTER TABLE users DROP COLUMN blocked&#39;</span>,
+  state_operations<span style="color:#f92672">=</span>[
+      migrations<span style="color:#f92672">.</span>AddField(
+          model_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;users&#39;</span>,
+          name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blocked&#39;</span>,
+          field<span style="color:#f92672">=</span>models<span style="color:#f92672">.</span>BooleanField(default<span style="color:#f92672">=</span>False),
+          preserve_default<span style="color:#f92672">=</span>True,
       ),
   ],
 )
-</code></pre>
-
-<h3 id="example-adding-a-boolean-field">Example: Adding a boolean field</h3>
-
+</code></pre></div><h3 id="example-adding-a-boolean-field">Example: Adding a boolean field</h3>
 <p>Let&rsquo;s assume you&rsquo;d like to add a boolean field to a large table that is false
 by default. By testing the migration on your staging database you established
 that using <code>BooleanField(default=False)</code> will be too slow so picking a
 <code>NullBooleanField(default=False)</code> <a href="https://docs.djangoproject.com/en/1.8/topics/migrations/#postgresql">seems like a natural
 choice</a>.</p>
-
 <p>Running the migration with <code>django-admin sqlmigrate</code> reveals what Django is doing here:</p>
-
-<pre><code class="language-sql">BEGIN;
-ALTER TABLE users ADD COLUMN blocked BOOLEAN DEFAULT false NULL;
-ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT;
-COMMIT;
-</code></pre>
-
-<p>Try running these queries in psql with <code>\timing</code> and you&rsquo;ll see that the <code>ADD
-COLUMN</code> will do a table rewrite to write the default value into the existing
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">BEGIN</span>;
+<span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> users <span style="color:#66d9ef">ADD</span> <span style="color:#66d9ef">COLUMN</span> blocked BOOLEAN <span style="color:#66d9ef">DEFAULT</span> <span style="color:#66d9ef">false</span> <span style="color:#66d9ef">NULL</span>;
+<span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> users <span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">COLUMN</span> blocked <span style="color:#66d9ef">DROP</span> <span style="color:#66d9ef">DEFAULT</span>;
+<span style="color:#66d9ef">COMMIT</span>;
+</code></pre></div><p>Try running these queries in psql with <code>\timing</code> and you&rsquo;ll see that the <code>ADD COLUMN</code> will do a table rewrite to write the default value into the existing
 rows.</p>
-
 <p>What you can do is setting up multiple migrations:</p>
-
 <h4 id="add-the-field-as-nullable-without-a-default">Add the field as nullable without a default</h4>
-
-<pre><code class="language-python">migrations.AddField(
-    model_name='user',
-    name='blocked',
-    field=models.NullBooleanField(),
-    preserve_default=True,
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">migrations<span style="color:#f92672">.</span>AddField(
+    model_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;user&#39;</span>,
+    name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blocked&#39;</span>,
+    field<span style="color:#f92672">=</span>models<span style="color:#f92672">.</span>NullBooleanField(),
+    preserve_default<span style="color:#f92672">=</span>True,
 )
-</code></pre>
-
-<p>This requires an exclusive lock for adding a column but doesn&rsquo;t perform a table rewrite.</p>
-
+</code></pre></div><p>This requires an exclusive lock for adding a column but doesn&rsquo;t perform a table rewrite.</p>
 <h4 id="add-the-default-to-the-database-schema">Add the default to the database schema</h4>
-
-<pre><code class="language-python">RunSQL(
-  'ALTER TABLE users ALTER COLUMN blocked SET DEFAULT false',
-  'ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT',
-  state_operations=[
-    migrations.AlterField(
-        model_name='user',
-        name='blocked',
-        field=models.NullBooleanField(default=False),
-        preserve_default=True,
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">RunSQL(
+  <span style="color:#e6db74">&#39;ALTER TABLE users ALTER COLUMN blocked SET DEFAULT false&#39;</span>,
+  <span style="color:#e6db74">&#39;ALTER TABLE users ALTER COLUMN blocked DROP DEFAULT&#39;</span>,
+  state_operations<span style="color:#f92672">=</span>[
+    migrations<span style="color:#f92672">.</span>AlterField(
+        model_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;user&#39;</span>,
+        name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blocked&#39;</span>,
+        field<span style="color:#f92672">=</span>models<span style="color:#f92672">.</span>NullBooleanField(default<span style="color:#f92672">=</span>False),
+        preserve_default<span style="color:#f92672">=</span>True,
     )
   ],
 )
-</code></pre>
-
-<p>Adding a default to an existing column also doesn&rsquo;t require an expensive table rewrite.</p>
-
+</code></pre></div><p>Adding a default to an existing column also doesn&rsquo;t require an expensive table rewrite.</p>
 <h4 id="update-existing-rows">Update existing rows</h4>
-
 <p><em>Update December 2017</em>: Support for <a href="https://docs.djangoproject.com/en/2.0/howto/writing-migrations/#non-atomic-migrations">non-atomic migrations</a> was
 added to Django 1.10. The following hacks are not necessary anymore.</p>
-
 <p><a href="http://stackoverflow.com/questions/1113277/how-do-i-do-large-non-blocking-updates-in-postgresql">Updating data in batches</a> as part of your data migration is
 tricky because you will have to <a href="http://stackoverflow.com/questions/31247810/commit-manually-in-django-data-migration">break out of the database
 transaction</a> that is already started by the migration executor.</p>
-
 <p>One could contain the admittedly messy transaction break out logic into a
 decorator to be used with the <code>RunPython</code> operation:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">non_atomic_migration</span>(func):
+    <span style="color:#a6e22e">@wraps</span>(func)
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">wrapper</span>(apps, schema_editor):
+        <span style="color:#66d9ef">if</span> schema_editor<span style="color:#f92672">.</span>connection<span style="color:#f92672">.</span>in_atomic_block:
+            schema_editor<span style="color:#f92672">.</span>atomic<span style="color:#f92672">.</span>__exit__(None, None, None)
+        <span style="color:#66d9ef">return</span> func(apps, schema_editor)
+    <span style="color:#66d9ef">return</span> wrapper
+</code></pre></div><p>The actual data migration would then look like that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">BATCHSIZE <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span>
 
-<pre><code class="language-python">def non_atomic_migration(func):
-    @wraps(func)
-    def wrapper(apps, schema_editor):
-        if schema_editor.connection.in_atomic_block:
-            schema_editor.atomic.__exit__(None, None, None)
-        return func(apps, schema_editor)
-    return wrapper
-</code></pre>
+<span style="color:#a6e22e">@non_atomic_migration</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">initialize_data</span>(apps, schema_editor):
+    User <span style="color:#f92672">=</span> apps<span style="color:#f92672">.</span>get_model(<span style="color:#e6db74">&#34;user&#34;</span>, <span style="color:#e6db74">&#34;User&#34;</span>)
+    max_pk <span style="color:#f92672">=</span> User<span style="color:#f92672">.</span>objects<span style="color:#f92672">.</span>aggregate(Max(<span style="color:#e6db74">&#39;pk&#39;</span>))[<span style="color:#e6db74">&#39;pk__max&#39;</span>]
+    <span style="color:#66d9ef">if</span> max_pk <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> None:
+        <span style="color:#66d9ef">for</span> offset <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, max_pk<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, BATCHSIZE):
+            (User<span style="color:#f92672">.</span>objects
+             <span style="color:#f92672">.</span>filter(pk__gte<span style="color:#f92672">=</span>offset)
+             <span style="color:#f92672">.</span>filter(pk__lt<span style="color:#f92672">=</span>offset<span style="color:#f92672">+</span>BATCHSIZE)
+             <span style="color:#f92672">.</span>filter(blocked__isnull<span style="color:#f92672">=</span>True)
+             <span style="color:#f92672">.</span>update(blocked<span style="color:#f92672">=</span>False))
 
-<p>The actual data migration would then look like that:</p>
-
-<pre><code class="language-python">BATCHSIZE = 1000
-
-@non_atomic_migration
-def initialize_data(apps, schema_editor):
-    User = apps.get_model(&quot;user&quot;, &quot;User&quot;)
-    max_pk = User.objects.aggregate(Max('pk'))['pk__max']
-    if max_pk is not None:
-        for offset in range(0, max_pk+1, BATCHSIZE):
-            (User.objects
-             .filter(pk__gte=offset)
-             .filter(pk__lt=offset+BATCHSIZE)
-             .filter(blocked__isnull=True)
-             .update(blocked=False))
-
-class Migration(migrations.Migration):
-    operations = [
-        migrations.RunPython(initialize_data, atomic=False),
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Migration</span>(migrations<span style="color:#f92672">.</span>Migration):
+    operations <span style="color:#f92672">=</span> [
+        migrations<span style="color:#f92672">.</span>RunPython(initialize_data, atomic<span style="color:#f92672">=</span>False),
     ]
-</code></pre>
-
-<p>Hopefully this will be addressed in future versions of Django so that it won&rsquo;t
+</code></pre></div><p>Hopefully this will be addressed in future versions of Django so that it won&rsquo;t
 be necessary to resort to this kind of hack.</p>
-
 <h4 id="set-the-not-null-constraint-on-the-field">Set the not null constraint on the field</h4>
-
-<pre><code class="language-python">migrations.AlterField(
-    model_name='user',
-    name='blocked',
-    field=models.BooleanField(default=False),
-    preserve_default=True,
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">migrations<span style="color:#f92672">.</span>AlterField(
+    model_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;user&#39;</span>,
+    name<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blocked&#39;</span>,
+    field<span style="color:#f92672">=</span>models<span style="color:#f92672">.</span>BooleanField(default<span style="color:#f92672">=</span>False),
+    preserve_default<span style="color:#f92672">=</span>True,
 )
-</code></pre>
-
-<p>This will perform a table scan before it sets the constraint on the database.</p>
-
+</code></pre></div><p>This will perform a table scan before it sets the constraint on the database.</p>
 <h2 id="remove-a-table-or-column">Remove a table or column</h2>
-
 <p><a href="http://www.databasesoup.com/2013/11/alter-table-and-downtime-part-i.html">Removing a table or even a column is easy</a> but has one slight
 twist compared to the other scenarios: You need to run the migration <em>after</em>
 the new code is deployed to <em>all</em> of your servers.</p>
-
 <p>Watch out if the column you&rsquo;re removing has a not-null constraint but no
 default value defined in the schema. INSERT operations from your new code will
 fail until the column removal migration is applied. In this case, you
 will have to drop the not null constraint or add a default in an intermediate
 migration.</p>
-
 <p>If you perform migrations as part of your deployment process as outlined
 above, you&rsquo;ll have to split the deployment in two phases. In the first phase,
 the column is removed from the model and not-null constraints are dropped if
 necessary. Phase two only contains the column removal operation.</p>
-
 <h2 id="transform-and-move-data">Transform and move data</h2>
-
 <p>So far we&rsquo;ve only covered adding and removing features. It gets more
 interesting and challenging when the existing data model is changed. Let&rsquo;s take
 the <a href="https://docs.djangoproject.com/en/1.8/topics/migrations/#data-migrations">data migration example from the Django
 documentation</a>, where separate first and last name fields
 are joined into one name field.</p>
-
 <p>Let&rsquo;s assume you just apply the migration while your application is running.
 The schema migration will add the new name column and the data migration will
 initialize the data for all existing users. During the time the migrations are
 running, the old code that reads and writes the old data is still active (let&rsquo;s
 call that V1).  Afterwards you&rsquo;d deploy the code that reads and writes the new
 data only (V2).</p>
-
 <p>There are a couple of problems:</p>
-
 <ul>
 <li>Users <em>inserted</em> by V1 after running the data migration don&rsquo;t have a name set</li>
 <li>Users <em>changed</em> by V1 after running the data migration have the wrong name set</li>
 </ul>
-
 <p>One could <em>re-run the data migration</em> after V2 is deployed to all servers.
 However, unless you keep track of which record is modified by which version,
 you&rsquo;d lose updates from V2 because you&rsquo;d rewrite the old data.</p>
-
 <p>Another option is to have an intermediate version of your web application which
 writes both the old and the new representation:</p>
-
-<pre><code class="language-python">def set_name(person, name):
-    person.name = name
-    person.first_name, person.last_name = name.rsplit(' ', 1)
-    person.save()
-</code></pre>
-
-<p>If you ignore the inaccuracy of the name splitting implementation, this would
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">set_name</span>(person, name):
+    person<span style="color:#f92672">.</span>name <span style="color:#f92672">=</span> name
+    person<span style="color:#f92672">.</span>first_name, person<span style="color:#f92672">.</span>last_name <span style="color:#f92672">=</span> name<span style="color:#f92672">.</span>rsplit(<span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#ae81ff">1</span>)
+    person<span style="color:#f92672">.</span>save()
+</code></pre></div><p>If you ignore the inaccuracy of the name splitting implementation, this would
 solve most problems. Just make sure to run the data migration for the untouched
 records after the deployment of the intermediate version. However, this gets
 quite cumbersome if you update this record in more than one place.</p>
-
 <p>In order to contain the logic to one single spot you could move that logic into
 a pre-save signal of the person model. Remember that the <a href="https://docs.djangoproject.com/en/1.8/topics/db/queries/#updating-multiple-objects-at-once">signal won&rsquo;t
 fire when updating multiple objects at once</a>.</p>
-
 <p>If the latter is a problem in your context, there is one more possibility that
 works surprisingly well for this use-case: Database triggers.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">REPLACE</span> <span style="color:#66d9ef">FUNCTION</span> update_person_name() <span style="color:#66d9ef">RETURNS</span> <span style="color:#66d9ef">trigger</span> <span style="color:#66d9ef">AS</span> <span style="color:#960050;background-color:#1e0010">$</span>func$
+    <span style="color:#66d9ef">BEGIN</span>
+        <span style="color:#66d9ef">IF</span> <span style="color:#66d9ef">NEW</span>.first_name <span style="color:#66d9ef">IS</span> <span style="color:#66d9ef">NULL</span> <span style="color:#66d9ef">THEN</span>
+            <span style="color:#66d9ef">NEW</span>.first_name <span style="color:#f92672">=</span> split_part(<span style="color:#66d9ef">NEW</span>.name, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#ae81ff">1</span>);
+            <span style="color:#66d9ef">NEW</span>.last_name <span style="color:#f92672">=</span> split_part(<span style="color:#66d9ef">NEW</span>.name, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#ae81ff">2</span>);
+        <span style="color:#66d9ef">END</span> <span style="color:#66d9ef">IF</span>;
+        <span style="color:#66d9ef">RETURN</span> <span style="color:#66d9ef">NEW</span>;
+    <span style="color:#66d9ef">END</span>;
+<span style="color:#960050;background-color:#1e0010">$</span>func$ <span style="color:#66d9ef">LANGUAGE</span> plpgsql;
 
-<pre><code class="language-sql">CREATE OR REPLACE FUNCTION update_person_name() RETURNS trigger AS $func$
-    BEGIN
-        IF NEW.first_name IS NULL THEN
-            NEW.first_name = split_part(NEW.name, ' ', 1);
-            NEW.last_name = split_part(NEW.name, ' ', 2);
-        END IF;
-        RETURN NEW;
-    END;
-$func$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_person_update
-    BEFORE INSERT OR UPDATE ON person
-FOR EACH ROW
-    EXECUTE PROCEDURE update_person_name();
-</code></pre>
-
-<p>The downsides of triggers are that those are hard to update, have limited
+<span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TRIGGER</span> on_person_update
+    <span style="color:#66d9ef">BEFORE</span> <span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">UPDATE</span> <span style="color:#66d9ef">ON</span> person
+<span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">EACH</span> <span style="color:#66d9ef">ROW</span>
+    <span style="color:#66d9ef">EXECUTE</span> <span style="color:#66d9ef">PROCEDURE</span> update_person_name();
+</code></pre></div><p>The downsides of triggers are that those are hard to update, have limited
 capabilities and are mostly invisible. However, when rolling out more involved
 updates I found them to be very robust compared to the other approaches. Just
 remember to remove triggers after they served their purpose.</p>
-
 <h1 id="summary">Summary</h1>
-
 <p>Apart from not requiring a downtime, there are various upsides of doing on-line
 migrations:</p>
-
 <ul>
 <li>Allows to perform rolling deployments</li>
 <li>Easier rollback</li>
 </ul>
-
 <p>There are a couple of downsides:</p>
-
 <ul>
 <li>Increased complexity - there are more states the whole system can be in</li>
 <li>Intermediate states are hard to test</li>
 </ul>
-
 <p>If you know what you&rsquo;re doing or if you work for a company that puts too many
 nines into their SLAs, you might start carrying out all database migrations on
 a live system. For more involved database changes you&rsquo;ll need more complicated
@@ -473,10 +366,8 @@ in causing it to fail in more interesting and unexpected ways. At some
 complexity level, attempting zero-downtime migrations turns into what some
 people would call &ldquo;mental masturbation&rdquo; - especially if the development cost
 exceeds the total cost of just having a downtime.</p>
-
 <p>However, many smaller schema changes can be safely carried out on a live site
 when keeping a few important things in mind:</p>
-
 <ul>
 <li>Add columns as nullable for bigger tables</li>
 <li>When adding NOT NULL columns, add a default to the database manually</li>
@@ -487,20 +378,15 @@ when keeping a few important things in mind:</p>
 changed</li>
 <li>Update rows of large tables in smaller transactional batches</li>
 </ul>
-
 <h2 id="django-wishlist">Django wishlist</h2>
-
 <p>There are improvements that could be made in Django, which would simplify
 some of the migration scenarios. Here is my wishlist:</p>
-
 <ul>
 <li>Make it possible to mark migrations as non-atomic (added in Django 1.10)</li>
 <li>Allow to preserve defaults in the database (where possible)</li>
 <li>Allow flagging post-deployment migrations and allow to exempt those while migrating</li>
 </ul>
-
 <h2 id="final-notes">Final notes</h2>
-
 <p>I hope this post was helpful. If you spot any errors or have any other remarks
 I&rsquo;d appreciate if you&rsquo;d <a href="https://github.com/Pankrat/pankrat.github.io/issues">raise an issue on GitHub</a> or <a href="https://twitter.com/pankrateer">reach out via
 Twitter</a>.</p>
@@ -512,7 +398,7 @@ Twitter</a>.</p>
 
 
 
-<script src="http://pankrat.github.io/js/highlight.pack.js"></script>
+<script src="https://pankrat.github.io/js/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 </body>
 </html>
